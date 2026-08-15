@@ -167,9 +167,9 @@ function render() {
     <h1>Employee Information</h1>
     <p class="sub">Submit an employee name and job title. Entries are stored directly in your Supabase project.</p>
 
-    ${state.showConfig ? renderConfig() : `<div class="config-toggle" id="toggleConfig">edit connection settings</div>`}
+    
 
-    ${state.configured ? renderForm() + renderSearch() + renderEntries() : ''}
+    ${state.configured ? renderForm() + renderSearch() + renderEntries() : `<div class="card"><h2>Connection</h2><p class="note">${state.status ? escapeHtml(state.status.msg) : 'Supabase is not configured on the server. Set SUPABASE_PROJECT_URL and SUPABASE_PUBLISHABLE_KEY in the .env file.'}</p></div>`}
   `;
 
   attachHandlers();
@@ -183,7 +183,6 @@ function renderConfig() {
       <input id="supabaseUrl" type="text" placeholder="https://xxxxx.supabase.co" value="${escapeAttr(state.supabaseUrl)}" />
       <label for="supabaseKey">Publishable key</label>
       <input id="supabaseKey" type="text" placeholder="sb_publishable_... (or legacy anon eyJhbGciOi...)" value="${escapeAttr(state.supabaseKey)}" />
-      <button id="connectBtn">Connect</button>
       <p class="note">
         Find these in your Supabase dashboard under Project Settings → API Keys. Use the <strong>publishable key</strong> (starts with <code>sb_publishable_</code>) — Supabase's new client-side key, safe to expose in a web page. Older projects may still show a legacy <strong>anon</strong> key (a long JWT starting with <code>eyJ</code>) instead, which also works here. Never use a <strong>secret</strong> or <strong>service_role</strong> key in this app — those are backend-only and will not work in a browser.
         Kept in memory for this session only, never saved to disk.
@@ -259,18 +258,6 @@ function escapeHtml(str) {
 function escapeAttr(str) { return escapeHtml(str); }
 
 function attachHandlers() {
-  const toggle = document.getElementById('toggleConfig');
-  if (toggle) toggle.addEventListener('click', () => { state.showConfig = true; render(); });
-
-  const connectBtn = document.getElementById('connectBtn');
-  if (connectBtn) connectBtn.addEventListener('click', handleConnect);
-
-  const urlInput = document.getElementById('supabaseUrl');
-  if (urlInput) urlInput.addEventListener('input', e => state.supabaseUrl = e.target.value);
-
-  const keyInput = document.getElementById('supabaseKey');
-  if (keyInput) keyInput.addEventListener('input', e => state.supabaseKey = e.target.value);
-
   const nameInput = document.getElementById('nameInput');
   if (nameInput) nameInput.addEventListener('input', e => state.form.name = e.target.value);
 
@@ -291,6 +278,7 @@ function attachHandlers() {
 
   const clearSearchBtn = document.getElementById('clearSearchBtn');
   if (clearSearchBtn) clearSearchBtn.addEventListener('click', handleClearSearch);
+}
 }
 
 async function handleConnect() {

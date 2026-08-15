@@ -162,9 +162,7 @@ function render() {
     <h1>Employee Information</h1>
     <p class="sub">Add employee name and job title to the database.</p>
 
-    ${state.showConfig ? renderConfig() : `<div class="config-toggle" id="toggleConfig">edit connection settings</div>`}
-
-    ${state.configured ? renderForm() + renderEntries() : ''}
+    ${state.configured ? renderForm() + renderEntries() : `<div class="card"><h2>Connection</h2><p class="note">${state.status ? escapeHtml(state.status.msg) : 'Supabase is not configured on the server. Set SUPABASE_PROJECT_URL and SUPABASE_PUBLISHABLE_KEY in the .env file.'}</p></div>`}
   `;
 
   attachHandlers();
@@ -178,7 +176,6 @@ function renderConfig() {
       <input id="supabaseUrl" type="text" placeholder="https://xxxxx.supabase.co" value="${escapeAttr(state.supabaseUrl)}" />
       <label for="supabaseKey">Publishable key</label>
       <input id="supabaseKey" type="text" placeholder="sb_publishable_... (or legacy anon eyJhbGciOi...)" value="${escapeAttr(state.supabaseKey)}" />
-      <button id="connectBtn">Connect</button>
       <p class="note">
         Find these in your Supabase dashboard under Project Settings → API Keys. Use the <strong>publishable key</strong> (starts with <code>sb_publishable_</code>) or a legacy <strong>anon</strong> key. Never use a <strong>secret</strong> or <strong>service_role</strong> key.
       </p>
@@ -227,18 +224,6 @@ function escapeAttr(str) {
 }
 
 function attachHandlers() {
-  const toggle = document.getElementById('toggleConfig');
-  if (toggle) toggle.addEventListener('click', () => { state.showConfig = true; render(); });
-
-  const connectBtn = document.getElementById('connectBtn');
-  if (connectBtn) connectBtn.addEventListener('click', handleConnect);
-
-  const urlInput = document.getElementById('supabaseUrl');
-  if (urlInput) urlInput.addEventListener('input', e => state.supabaseUrl = e.target.value);
-
-  const keyInput = document.getElementById('supabaseKey');
-  if (keyInput) keyInput.addEventListener('input', e => state.supabaseKey = e.target.value);
-
   const nameInput = document.getElementById('nameInput');
   if (nameInput) nameInput.addEventListener('input', e => state.form.name = e.target.value);
 

@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Home · Invoice Management</title>
+<style>
+  body { font-family: Arial, Helvetica, sans-serif; background: #f7f7f8; color:#222; padding:40px; }
+  .card { background:white; padding:24px; border-radius:6px; max-width:780px; margin:auto; box-shadow:0 6px 18px rgba(20,20,20,0.06);} 
+  h1 { margin-top:0 }
+  ul { padding-left:18px }
+  a { color:#0b6b63; text-decoration:none }
+  a:hover { text-decoration:underline }
+  .small { color:#666; font-size:14px }
+</style>
+</head>
+<body>
+  <div class="card">
+    <h1>Invoice / Master Data Management</h1>
+    <p class="small">A minimal web UI to add/remove Employees, Customers, Items and Invoices using Supabase. Connection is read from environment variables on the server (SUPABASE_PROJECT_URL and SUPABASE_PUBLISHABLE_KEY) or edited in each page's connection panel.</p>
+    <h2>Pages</h2>
+    <ul>
+      <li><a href="/employee">Employees (add/remove)</a></li>
+      <li><a href="/customers">Customers (add/remove)</a></li>
+      <li><a href="/items">Items (add/remove)</a></li>
+      <li><a href="/invoices">Invoices (add/remove)</a></li>
+    </ul>
+    <h2>Notes</h2>
+    <ul>
+      <li>This UI expects the following Supabase tables (with at least an auto-generated <code>id</code> and <code>created_at</code> timestamp): <code>employee</code>, <code>customers</code>, <code>items</code>, <code>invoices</code>.</li>
+      <li>Set SUPABASE_PROJECT_URL and SUPABASE_PUBLISHABLE_KEY in a .env file used by the server to auto-connect. The keys are injected into pages at runtime.</li>
+    </ul>
+  </div>
+</body>
+</html>

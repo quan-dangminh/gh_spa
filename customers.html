@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Customers · Invoice Management</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
+<style>
+  body{font-family:Arial,Helvetica,sans-serif;background:#fbfaf7;color:#1b1f23;padding:32px}
+  .wrap{max-width:760px;margin:0 auto}
+  .card{background:#fff;border:1px solid #d8d3c8;padding:20px;border-radius:6px;margin-bottom:18px}
+  label{display:block;margin-bottom:6px;color:#666}
+  input,select{width:100%;padding:10px;margin-bottom:12px;border:1px solid #d8d3c8;border-radius:4px}
+  button{background:#2f5d50;color:#fff;padding:12px;border:none;border-radius:4px;width:100%;cursor:pointer}
+  .entries{list-style:none;padding:0}
+  .entry{border-bottom:1px solid #eee;padding:10px 0}
+  .meta{color:#666;font-size:13px}
+  .small{font-size:13px;color:#666}
+  .row{display:flex;gap:10px}
+  .row>div{flex:1}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <h1>Customers</h1>
+    <p class="small">Add and remove customers. Uses the <code>customers</code> table in Supabase.</p>
+
+    <div class="card">
+      <h3>Connection</h3>
+      <p class="small">Connection is read from the server .env (SUPABASE_PROJECT_URL and SUPABASE_PUBLISHABLE_KEY) and injected into the page. No client-side connection editing is available.</p>
+    </div>
+
+    <div class="card">
+      <h3>New Customer</h3>
+      <label>Customer Name</label>
+      <input id="name" />
+      <div class="row">
+        <div>
+          <label>Phone</label>
+          <input id="phone" />
+        </div>
+        <div>
+          <label>Gender</label>
+          <select id="gender"><option value="">(select)</option><option>Male</option><option>Female</option><option>Other</option></select>
+        </div>
+      </div>
+      <label>Address</label>
+      <input id="address" />
+      <label>Email</label>
+      <input id="email" />
+      <label>Date of Birth</label>
+      <input type="date" id="dob" />
+      <label>Created By (employee id or name)</label>
+      <input id="created_by" />
+      <button id="saveBtn">Save Customer</button>
+    </div>
+
+    <div class="card">
+      <h3>Customers (recent)</h3>
+      <div id="listContainer">Loading…</div>
+    </div>
+  </div>
+
+<script>
+const { createClient } = supabase;
+let client = null;
+let state = { entries: [] };
+
+function setStatus(msg){const el=document.getElementById('listContainer'); if(typeof msg==='string') el.innerText=msg}
+
+async function connect(url,key){
+  const cleanUrl = (url||'').trim().replace(/\/+$/,'');
+  const cleanKey = (key||'').trim();
+  client = createClient(cleanUrl, cleanKey);
+  await loadEntries();
+}
+
+async function loadEntries(){
+  setStatus('Loading…');
+  try{
+    const { data, error } = await client.from('customers').select('*').order('created_at',{ascending:false}).limit(50);
+    if(error) throw error;
+    state.entries = data || [];
+    renderList();
+  }catch(err){ setStatus('Could not load: '+err.message) }
+}
+
+function renderList(){
+  const container = document.getElementById('listContainer');
+  if(!state.entries.length){ container.innerHTML='<div class="small">No customers yet.</div>'; return }
+  container.innerHTML = `<ul class="entries">${state.entries.map(e=>`<li class="entry"><div style="display:flex;justify-content:space-between"><div><strong>${escapeHtml(e.name||'')}</strong><div class="meta">${escapeHtml(e.email||'')} · ${escapeHtml(e.phone||'')}</div></div><div><button data-id="${e.id}" class="delBtn">Delete</button></div></div></li>`).join('')}</ul>`;
+  Array.from(document.getElementsByClassName('delBtn')).forEach(b=>b.addEventListener('click',handleDelete));
+}
+
+function escapeHtml(s){return String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+
+async function handleDelete(e){
+  const id = e.currentTarget.getAttribute('data-id');
+  if(!confirm('Delete this customer?')) return;
+  try{
+    const { error } = await client.from('customers').delete().eq('id', id);
+    if(error) throw error;
+    await loadEntries();
+  }catch(err){ alert('Delete failed: '+err.message) }
+}
+
+async function handleSave(){
+  const payload = {
+    name: document.getElementById('name').value.trim(),
+    phone: document.getElementById('phone').value.trim(),
+    address: document.getElementById('address').value.trim(),
+    email: document.getElementById('email').value.trim(),
+    gender: document.getElementById('gender').value,
+    dob: document.getElementById('dob').value,
+    created_by: document.getElementById('created_by').value.trim(),
+  };
+  if(!payload.name){ alert('Name required'); return }
+  try{
+    const { error } = await client.from('customers').insert([payload]);
+    if(error) throw error;
+    document.getElementById('name').value=''; document.getElementById('phone').value=''; document.getElementById('address').value=''; document.getElementById('email').value='';
+    await loadEntries();
+  }catch(err){ alert('Save failed: '+err.message) }
+}
+
+function autoConnect(){
+  if (typeof window.ENV_SUPABASE_URL !== 'undefined' && typeof window.ENV_SUPABASE_KEY !== 'undefined') {
+    const url = window.ENV_SUPABASE_URL, key = window.ENV_SUPABASE_KEY;
+    if (url && key) {
+      connect(url, key).catch(err => setStatus('Auto-connect failed: ' + err.message));
+      return;
+    }
+  }
+  setStatus('Supabase is not configured on the server. Set SUPABASE_PROJECT_URL and SUPABASE_PUBLISHABLE_KEY in the .env file.');
+}
+
+document.getElementById('saveBtn').addEventListener('click',handleSave);
+
+// try auto connect if server injected env
+autoConnect();
+</script>
+</body>
+</html>
