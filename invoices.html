@@ -38,6 +38,7 @@
     .nav-icon { width: 18px; text-align: center; color: var(--sidebar-muted); }
     .divider { border-top: 1px solid rgba(255,255,255,0.08); margin: 12px 0; }
     .usercard { margin-top: auto; display: flex; align-items: center; gap: 12px; padding: 10px 8px 4px; border-top: 1px solid rgba(255,255,255,0.08); }
+    .logout-btn { width: 100%; margin-top: 10px; border: 1px solid rgba(255,255,255,0.12); background: rgba(255,255,255,0.06); color: var(--sidebar-text); border-radius: 10px; padding: 10px 12px; font-weight: 700; cursor: pointer; }
     .avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, #ffd8a8, #f7a551); display: grid; place-items: center; color: #fff; font-weight: 700; }
     .name { font-size: 0.92rem; font-weight: 700; }
     .mail { font-size: 0.73rem; color: var(--sidebar-muted); }
@@ -113,6 +114,7 @@
           <div class="mail">admin@bizflow.com</div>
         </div>
       </div>
+      <button id="logoutBtn" class="logout-btn" type="button">Logout</button>
     </aside>
 
     <main class="content">
@@ -199,13 +201,62 @@
     let client = null;
     let state = { rows: [], selectedId: null, editingId: null, search: '' };
 
+    function readCurrentUser() {
+      try {
+        const value = JSON.parse(localStorage.getItem('bizflow-current-user') || 'null');
+        window.__CURRENT_USER__ = value || {};
+        return value || null;
+      } catch (error) {
+        window.__CURRENT_USER__ = {};
+        return null;
+      }
+    }
+
+    function applyUserProfile() {
+      const user = window.__CURRENT_USER__ || {};
+      const fullName = user.fullName || user.name || user.email || 'User';
+      const email = user.email || '';
+      const initials = (fullName || 'U').trim().charAt(0).toUpperCase();
+
+      document.querySelectorAll('.avatar, .usercard .avatar, .user-card .avatar').forEach(el => { el.textContent = initials; });
+      document.querySelectorAll('.usercard .name, .user-card .name').forEach(el => { el.textContent = fullName; });
+      document.querySelectorAll('.usercard .mail, .user-card .mail').forEach(el => { el.textContent = email || 'No email'; });
+    }
+
+    function getCurrentUserLabel() {
+      const user = window.__CURRENT_USER__ || {};
+      return (user.fullName || user.name || user.email || 'User').trim();
+    }
+
+    function ensureAuthenticated() {
+      const user = readCurrentUser();
+      if (!user || !user.email || !user.name) {
+        window.location.href = '/login';
+        return null;
+      }
+      window.__CURRENT_USER__ = user;
+      applyUserProfile();
+      return user;
+    }
+
     function setStatus(msg) {
       document.getElementById('detailCard').innerHTML = '<div class="detail-empty">' + escapeHtml(msg) + '</div>';
     }
 
     async function connect(url, key) {
+      const user = ensureAuthenticated();
+      if (!user) return;
       client = createClient((url || '').trim().replace(/\/+$/, ''), (key || '').trim());
       await Promise.all([loadRows(), loadEmployeeNames()]);
+    }
+
+    function bindLogout() {
+      const logoutBtn = document.getElementById('logoutBtn');
+      if (!logoutBtn) return;
+      logoutBtn.addEventListener('click', () => {
+        localStorage.removeItem('bizflow-current-user');
+        window.location.href = '/login';
+      });
     }
 
     async function loadEmployeeNames() {
@@ -222,6 +273,15 @@
           option.textContent = row.name;
           selector.appendChild(option);
         }
+
+        const preferred = getCurrentUserLabel();
+        if (preferred && ![...selector.options].some(opt => opt.value === preferred)) {
+          const option = document.createElement('option');
+          option.value = preferred;
+          option.textContent = preferred;
+          selector.appendChild(option);
+        }
+        if (preferred) selector.value = preferred;
       } catch (err) {
         console.warn('Could not load employee names:', err);
         selector.innerHTML = '<option value="">Could not load employees</option>';
@@ -347,7 +407,7 @@
       form.price.value = row ? (row.price ?? '') : '';
       form.quantity.value = row ? (row.quantity ?? 1) : 1;
       form.discount_amount.value = row ? (row.discount_amount ?? 0) : 0;
-      form.created_by.value = row ? (row.created_by || '') : '';
+      form.created_by.value = row ? (row.created_by || getCurrentUserLabel()) : getCurrentUserLabel();
       modal.classList.add('open');
     }
 
@@ -395,6 +455,7 @@
     document.getElementById('cancelModalBtn').addEventListener('click', closeModal);
     document.getElementById('invoiceForm').addEventListener('submit', submitInvoice);
     document.getElementById('searchInput').addEventListener('input', (e) => { state.search = e.target.value; renderTable(); });
+    bindLogout();
 
     function autoConnect() {
       if (typeof window.ENV_SUPABASE_URL !== 'undefined' && typeof window.ENV_SUPABASE_KEY !== 'undefined') {

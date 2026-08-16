@@ -21,19 +21,31 @@ const injectEnvVars = (html) => {
 };
 
 app.get('/', (req, res) => {
+  let html = fs.readFileSync(path.join(__dirname, 'login.html'), 'utf8');
+  html = injectEnvVars(html);
+  res.send(html);
+});
+
+app.get('/login', (req, res) => {
+  let html = fs.readFileSync(path.join(__dirname, 'login.html'), 'utf8');
+  html = injectEnvVars(html);
+  res.send(html);
+});
+
+app.get('/home', (req, res) => {
   let html = fs.readFileSync(path.join(__dirname, 'home.html'), 'utf8');
   html = injectEnvVars(html);
   res.send(html);
 });
 
 app.get('/employee', (req, res) => {
-  let html = fs.readFileSync(path.join(__dirname, 'employee_input_form.html'), 'utf8');
+  let html = fs.readFileSync(path.join(__dirname, 'employees.html'), 'utf8');
   html = injectEnvVars(html);
   res.send(html);
 });
 
 app.get('/employees', (req, res) => {
-  let html = fs.readFileSync(path.join(__dirname, 'employee_input_form.html'), 'utf8');
+  let html = fs.readFileSync(path.join(__dirname, 'employees.html'), 'utf8');
   html = injectEnvVars(html);
   res.send(html);
 });

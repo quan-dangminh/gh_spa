@@ -151,6 +151,19 @@
       border-top: 1px solid rgba(255,255,255,0.08);
     }
 
+    .logout-btn {
+      margin-top: 12px;
+      width: 100%;
+      border: 1px solid rgba(255,255,255,0.14);
+      background: rgba(255,255,255,0.06);
+      color: var(--sidebar-text);
+      border-radius: 10px;
+      padding: 10px 12px;
+      font-size: 0.9rem;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
     .avatar {
       width: 32px;
       height: 32px;
@@ -473,6 +486,7 @@
           <span class="mail">admin@bizflow.com</span>
         </div>
       </div>
+      <button id="logoutBtn" class="logout-btn" type="button">Logout</button>
     </aside>
 
     <main class="main">
@@ -508,6 +522,50 @@
   <script>
     const cardsRoot = document.getElementById('cards');
     const todayDate = document.getElementById('todayDate');
+
+    function readCurrentUser() {
+      try {
+        const value = JSON.parse(localStorage.getItem('bizflow-current-user') || 'null');
+        window.__CURRENT_USER__ = value || {};
+        return value || null;
+      } catch (error) {
+        window.__CURRENT_USER__ = {};
+        return null;
+      }
+    }
+
+    function applyUserProfile() {
+      const user = window.__CURRENT_USER__ || {};
+      const fullName = user.fullName || user.name || user.email || 'User';
+      const email = user.email || '';
+      const initial = (fullName || 'U').trim().charAt(0).toUpperCase();
+
+      const avatarEls = document.querySelectorAll('.avatar');
+      avatarEls.forEach(el => { el.textContent = initial; });
+
+      const nameEls = document.querySelectorAll('.user-card .name, .usercard .name');
+      nameEls.forEach(el => { el.textContent = fullName; });
+
+      const mailEls = document.querySelectorAll('.user-card .mail, .usercard .mail');
+      mailEls.forEach(el => { el.textContent = email || 'No email'; });
+
+      const titleEl = document.querySelector('.title');
+      if (titleEl) {
+        titleEl.textContent = `Welcome back, ${fullName}!`;
+      }
+    }
+
+    function ensureAuthenticated() {
+      const user = readCurrentUser();
+      if (!user || !user.email || !user.name) {
+        window.location.href = '/login';
+        return null;
+      }
+
+      window.__CURRENT_USER__ = user;
+      applyUserProfile();
+      return user;
+    }
 
     const defaultMetrics = [
       {
@@ -604,6 +662,15 @@
       todayDate.textContent = 'Today is ' + now.toLocaleDateString('en-US', options);
     }
 
+    function bindLogout() {
+      const logoutBtn = document.getElementById('logoutBtn');
+      if (!logoutBtn) return;
+      logoutBtn.addEventListener('click', () => {
+        localStorage.removeItem('bizflow-current-user');
+        window.location.href = '/login';
+      });
+    }
+
     async function loadDashboardMetrics() {
       const metrics = JSON.parse(JSON.stringify(defaultMetrics));
       const url = typeof window.ENV_SUPABASE_URL !== 'undefined' ? window.ENV_SUPABASE_URL : '';
@@ -615,8 +682,10 @@
       }
 
       try {
-        const client = supabase.createClient(url, key);
+        const user = ensureAuthenticated();
+        if (!user) return;
 
+        const client = supabase.createClient(url, key);
         const [employeeRes, customerRes, itemRes, invoiceRes] = await Promise.all([
           client.from('employee').select('id', { count: 'exact' }),
           client.from('customers').select('id', { count: 'exact' }),
@@ -641,6 +710,7 @@
 
     updateDateText();
     renderCards(defaultMetrics);
+    bindLogout();
     loadDashboardMetrics();
   </script>
 </body>

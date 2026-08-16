@@ -5,8 +5,10 @@ A minimal web UI (static pages + small Express server) to manage employees, cust
 
 Quick overview
 --------------
-- Server: Express (server.js) serves static HTML pages and injects SUPABASE_PROJECT_URL and SUPABASE_PUBLISHABLE_KEY (from .env) into each page.
-- Frontend: simple HTML/JS pages (employees.html, customers.html, items.html, invoices.html, home.html). Each page uses the supabase-js client (CDN) to talk directly to Supabase.
+- Server: Express (server.js) serves the login page first and then the app pages, injecting SUPABASE_PROJECT_URL and SUPABASE_PUBLISHABLE_KEY (from .env) into each page.
+- Frontend: simple HTML/JS pages (login.html, employees.html, customers.html, items.html, invoices.html, home.html). Each page uses the supabase-js client (CDN) to talk directly to Supabase.
+- Login: the app uses a local login form with a full name and email. The entered user information becomes the default value for created_by fields and is displayed in the sidebar on every page.
+- Authentication: no Google or Supabase Auth provider is required for this project. The login is local to the browser via browser storage.
 
 Prerequisites
 -------------
@@ -57,7 +59,9 @@ Restart the service
 
 Pages / Routes
 --------------
-- /                  → home.html (dashboard)
+- /                  → login.html
+- /login             → login.html
+- /home              → home.html (dashboard)
 - /employee          → employees.html
 - /customers         → customers.html
 - /items             → items.html
