@@ -95,7 +95,7 @@
     <aside class="sidebar">
       <div class="brand">
         <div class="brand-mark"></div>
-        <div class="brand-name">BizManager</div>
+        <div class="brand-name">GH Spa & Beauty</div>
       </div>
       <nav class="nav">
         <a href="/"><span class="nav-icon">⌂</span>Dashboard</a>
@@ -339,7 +339,6 @@
           <td>${escapeHtml(row.created_by || '—')}</td>
           <td>
             <div class="row-actions">
-              <button class="mini-btn edit" data-action="edit" data-id="${row.id}">Edit</button>
               <button class="mini-btn delete" data-action="delete" data-id="${row.id}">Delete</button>
             </div>
           </td>
@@ -351,10 +350,6 @@
         state.selectedId = tr.dataset.id;
         renderTable();
         renderDetail();
-      }));
-      rowsBody.querySelectorAll('button[data-action="edit"]').forEach(btn => btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        openModal('Edit Item', btn.dataset.id);
       }));
       rowsBody.querySelectorAll('button[data-action="delete"]').forEach(btn => btn.addEventListener('click', async (e) => {
         e.stopPropagation();
@@ -377,7 +372,6 @@
       detailCard.innerHTML = `
         <div class="detail-header">
           <h3>${escapeHtml(selected.name || 'Item')}</h3>
-          <button class="secondary-btn" id="detailEditBtn">Edit</button>
         </div>
         <div class="detail-info-grid">
           <div class="field"><span class="field-label">Name</span><span class="field-value">${escapeHtml(selected.name || '—')}</span></div>
@@ -394,7 +388,6 @@
           <button class="danger-btn" id="detailDeleteBtn">Delete</button>
         </div>
       `;
-      document.getElementById('detailEditBtn').addEventListener('click', () => openModal('Edit Item', selected.id));
       document.getElementById('detailEditFooterBtn').addEventListener('click', () => openModal('Edit Item', selected.id));
       document.getElementById('detailDeleteBtn').addEventListener('click', async () => {
         if (!confirm('Warning: Deleting this item is permanent. Continue?')) return;
