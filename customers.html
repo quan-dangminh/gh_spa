@@ -64,7 +64,14 @@
 <script>
 const { createClient } = supabase;
 let client = null;
-let state = { entries: [] };
+let state = {
+  entries: [],
+  page: 1,
+  pageSize: 20,
+  total: 0,
+  editingId: null,
+  editForm: {}
+};
 
 function setStatus(msg){const el=document.getElementById('listContainer'); if(typeof msg==='string') el.innerText=msg}
 
@@ -72,36 +79,173 @@ async function connect(url,key){
   const cleanUrl = (url||'').trim().replace(/\/+$/,'');
   const cleanKey = (key||'').trim();
   client = createClient(cleanUrl, cleanKey);
-  await loadEntries();
+  await loadEntries(state.page);
 }
 
-async function loadEntries(){
+async function loadEntries(page = 1){
+  if (!client) { setStatus('No Supabase client available.'); return; }
+  state.page = page;
   setStatus('Loading…');
   try{
-    const { data, error } = await client.from('customers').select('*').order('created_at',{ascending:false}).limit(50);
-    if(error) throw error;
-    state.entries = data || [];
+    const start = (page - 1) * state.pageSize;
+    const end = start + state.pageSize - 1;
+    const resp = await client.from('customers')
+      .select('*', { count: 'exact' })
+      .order('created_at', {ascending:false})
+      .range(start, end);
+
+    if (resp.error) throw resp.error;
+    const data = resp.data || [];
+    state.entries = data;
+    state.total = resp.count || (data.length + start);
     renderList();
   }catch(err){ setStatus('Could not load: '+err.message) }
 }
 
 function renderList(){
   const container = document.getElementById('listContainer');
-  if(!state.entries.length){ container.innerHTML='<div class="small">No customers yet.</div>'; return }
-  container.innerHTML = `<ul class="entries">${state.entries.map(e=>`<li class="entry"><div style="display:flex;justify-content:space-between"><div><strong>${escapeHtml(e.name||'')}</strong><div class="meta">${escapeHtml(e.email||'')} · ${escapeHtml(e.phone||'')}</div></div><div><button data-id="${e.id}" class="delBtn">Delete</button></div></div></li>`).join('')}</ul>`;
-  Array.from(document.getElementsByClassName('delBtn')).forEach(b=>b.addEventListener('click',handleDelete));
+  if(!state.entries || state.entries.length === 0){
+    container.innerHTML = `<div class="small">No customers on this page.</div>`;
+    renderPager();
+    return;
+  }
+
+  const rows = state.entries.map(e => {
+    if (state.editingId === String(e.id)) {
+      // editing row (all fields)
+      const f = state.editForm;
+      return `
+        <li class="entry">
+          <div style="display:flex;gap:12px;align-items:center;flex-wrap:wrap;">
+            <input data-field="name" value="${escapeHtml(f.name||e.name||'')}" placeholder="Name" style="flex:1 1 300px;padding:8px;border:1px solid #d8d3c8;border-radius:4px" />
+            <input data-field="email" value="${escapeHtml(f.email||e.email||'')}" placeholder="Email" style="flex:1 1 250px;padding:8px;border:1px solid #d8d3c8;border-radius:4px" />
+            <input data-field="phone" value="${escapeHtml(f.phone||e.phone||'')}" placeholder="Phone" style="flex:1 1 180px;padding:8px;border:1px solid #d8d3c8;border-radius:4px" />
+            <input data-field="address" value="${escapeHtml(f.address||e.address||'')}" placeholder="Address" style="flex:1 1 100%;padding:8px;border:1px solid #d8d3c8;border-radius:4px;margin-top:8px" />
+            <select data-field="gender" style="flex:0 0 160px;padding:8px;border:1px solid #d8d3c8;border-radius:4px;margin-top:8px">
+              <option value="">(select)</option>
+              <option value="Male" ${ (f.gender||e.gender||'') === 'Male' ? 'selected' : '' }>Male</option>
+              <option value="Female" ${ (f.gender||e.gender||'') === 'Female' ? 'selected' : '' }>Female</option>
+              <option value="Other" ${ (f.gender||e.gender||'') === 'Other' ? 'selected' : '' }>Other</option>
+            </select>
+            <input data-field="dob" type="date" value="${escapeHtml(f.dob||e.dob||'')}" style="flex:0 0 180px;padding:8px;border:1px solid #d8d3c8;border-radius:4px;margin-top:8px" />
+            <input data-field="created_by" value="${escapeHtml(f.created_by||e.created_by||'')}" placeholder="Created by" style="flex:1 1 220px;padding:8px;border:1px solid #d8d3c8;border-radius:4px;margin-top:8px" />
+          </div>
+          <div style="display:flex;gap:8px;margin-top:8px;">
+            <button class="saveBtn" data-id="${e.id}">Save</button>
+            <button class="cancelBtn" data-id="${e.id}" style="background:#888;">Cancel</button>
+          </div>
+        </li>
+      `;
+    }
+
+    return `
+      <li class="entry">
+        <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;">
+          <div style="flex:1;min-width:0;">
+            <strong style="display:block;">${escapeHtml(e.name||'')}</strong>
+            <div class="meta">${escapeHtml(e.email||'')} · ${escapeHtml(e.phone||'')}</div>
+            <div class="meta">${escapeHtml(e.address||'')}</div>
+          </div>
+          <div style="width:220px;display:flex;gap:8px;justify-content:flex-end;">
+            <button class="editBtn" data-id="${e.id}">Edit</button>
+            <button class="delBtn" data-id="${e.id}" style="background:#d9534f;">Delete</button>
+          </div>
+        </div>
+      </li>
+    `;
+  }).join('');
+
+  container.innerHTML = `
+    <ul class="entries">${rows}</ul>
+    <div id="pager" style="margin-top:12px; display:flex;gap:8px;align-items:center;">
+      <button id="prevPage" ${state.page<=1? 'disabled' : ''}>Previous</button>
+      <span style="margin:0 8px; color:var(--muted)">Page ${state.page} of ${Math.max(1, Math.ceil(state.total / state.pageSize))}</span>
+      <button id="nextPage" ${state.page >= Math.ceil(state.total / state.pageSize) ? 'disabled' : ''}>Next</button>
+    </div>
+  `;
+
+  // attach handlers
+  Array.from(container.getElementsByClassName('delBtn')).forEach(b=>b.addEventListener('click', handleDelete));
+  Array.from(container.getElementsByClassName('editBtn')).forEach(b=>b.addEventListener('click', handleEdit));
+  Array.from(container.getElementsByClassName('saveBtn')).forEach(b=>b.addEventListener('click', handleSaveEdit));
+  Array.from(container.getElementsByClassName('cancelBtn')).forEach(b=>b.addEventListener('click', handleCancelEdit));
+
+  const prev = document.getElementById('prevPage');
+  const next = document.getElementById('nextPage');
+  if (prev) prev.addEventListener('click', () => loadEntries(Math.max(1, state.page-1)));
+  if (next) next.addEventListener('click', () => loadEntries(state.page+1));
 }
 
-function escapeHtml(s){return String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
+function renderPager(){
+  const container = document.getElementById('listContainer');
+  container.innerHTML += `\n    <div id="pager" style="margin-top:12px; display:flex;gap:8px;align-items:center;">\n      <button id="prevPage" disabled>Previous</button>\n      <span style=\"margin:0 8px; color:var(--muted)\">Page ${state.page} of ${Math.max(1, Math.ceil(state.total / state.pageSize))}</span>\n      <button id=\"nextPage\" disabled>Next</button>\n    </div>`;
+}
+
+function escapeHtml(s){return String(s||'').replace(/[&<>\"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
 
 async function handleDelete(e){
   const id = e.currentTarget.getAttribute('data-id');
-  if(!confirm('Delete this customer?')) return;
+  if (!confirm('Warning: Deleting a customer is permanent. Are you sure you want to delete this customer?')) return;
   try{
     const { error } = await client.from('customers').delete().eq('id', id);
     if(error) throw error;
-    await loadEntries();
+    // reload current page (ensure page still valid)
+    const totalAfter = Math.max(0, state.total - 1);
+    const lastPage = Math.max(1, Math.ceil(totalAfter / state.pageSize));
+    const newPage = Math.min(state.page, lastPage);
+    await loadEntries(newPage);
   }catch(err){ alert('Delete failed: '+err.message) }
+}
+
+function handleEdit(e){
+  const id = e.currentTarget.getAttribute('data-id');
+  const entry = state.entries.find(x => String(x.id) === String(id));
+  if (!entry) return;
+  state.editingId = String(id);
+  // copy current values (all fields)
+  state.editForm = {
+    name: entry.name || '',
+    email: entry.email || '',
+    phone: entry.phone || '',
+    address: entry.address || '',
+    gender: entry.gender || '',
+    dob: entry.dob || '',
+    created_by: entry.created_by || ''
+  };
+  renderList();
+}
+
+function handleCancelEdit(e){
+  state.editingId = null;
+  state.editForm = {};
+  renderList();
+}
+
+async function handleSaveEdit(e){
+  const id = e.currentTarget.getAttribute('data-id');
+  // read inputs from DOM
+  const li = e.currentTarget.closest('li.entry');
+  if (!li) return;
+  const name = li.querySelector('input[data-field="name"]').value.trim();
+  const email = li.querySelector('input[data-field="email"]').value.trim();
+  const phone = li.querySelector('input[data-field="phone"]').value.trim();
+  const address = li.querySelector('input[data-field="address"]').value.trim();
+  const genderEl = li.querySelector('select[data-field="gender"]');
+  const gender = genderEl ? genderEl.value : '';
+  const dobEl = li.querySelector('input[data-field="dob"]');
+  const dob = dobEl ? dobEl.value : '';
+  const created_by = li.querySelector('input[data-field="created_by"]').value.trim();
+
+  if (!name) { alert('Name is required'); return; }
+  if (!confirm('Warning: Saving changes will update the customer record. Continue?')) return;
+
+  try{
+    const { error } = await client.from('customers').update({ name, email, phone, address, gender, dob, created_by }).eq('id', id);
+    if (error) throw error;
+    state.editingId = null;
+    state.editForm = {};
+    await loadEntries(state.page);
+  }catch(err){ alert('Update failed: '+err.message) }
 }
 
 async function handleSave(){
@@ -115,11 +259,13 @@ async function handleSave(){
     created_by: document.getElementById('created_by').value.trim(),
   };
   if(!payload.name){ alert('Name required'); return }
+  if(!confirm('Warning: Creating a new customer will add a record to the database. Continue?')) return;
   try{
     const { error } = await client.from('customers').insert([payload]);
     if(error) throw error;
     document.getElementById('name').value=''; document.getElementById('phone').value=''; document.getElementById('address').value=''; document.getElementById('email').value='';
-    await loadEntries();
+    // reload first page
+    await loadEntries(1);
   }catch(err){ alert('Save failed: '+err.message) }
 }
 

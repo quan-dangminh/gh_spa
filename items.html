@@ -31,38 +31,28 @@
     </div>
 
     <div class="card">
-      <h3>New Item</h3>
-      <label>Item Name</label>
+      <h3>Thông Tin</h3>
+      <label>Tên Gọi</label>
       <input id="name" />
-      <div class="row">
-        <div>
-          <label>Group</label>
-          <input id="group" />
-        </div>
-        <div>
-          <label>Sub Group</label>
-          <input id="subgroup" />
-        </div>
-      </div>
-      <label>Price</label>
-      <input id="price" type="number" step="0.01" />
-      <div class="row">
-        <div>
-          <label>Number of Usage</label>
-          <input id="number_of_usage" type="number" />
-        </div>
-        <div>
-          <label>Period</label>
-          <input id="period" placeholder="e.g., monthly" />
-        </div>
-      </div>
-      <label>Created By (employee id or name)</label>
-      <input id="created_by" />
-      <button id="saveBtn">Save Item</button>
+      <label>Loại Dịch Vụ</label>
+      <select id="group"><option value="">(select)</option><option>DỊCH VỤ</option><option>GÓI DỊCH VỤ</option><option>SẢN PHẨM</option></select>
+      <label>Chi Tiết Loại Dịch Vụ</label>
+      <select id="subgroup"><option value="">(select)</option><option>SẢN PHẨM</option><option>A - DỊCH VỤ CHĂM SÓC DA MẶT</option><option>B - BODY CARE</option><option>C - DỊCH VỤ TRIỆT LÔNG</option><option>D - DỊCH VỤ VI KIM</option><option>E - DỊCH VỤ LASER</option><option>F - DỊCH VỤ PHUN THÊU THẨM MỸ</option><option>DỊCH VỤ MESO</option><option>DV TRIỆT LÔNG ( hoa hồng NV ) - K bán</option><option>Không phân loại</option><option>LIỆU TRÌNH CẤY MI SINH HỌC</option><option>COMBO MESO</option><option>LIỆU TRÌNH TRIỆT LÔNG</option></select>
+      <label>Giá Bán</label>
+      <input id="price" type="number" step="5000" />
+      <label>Số Lần Sử Dụng</label>
+      <input id="number_of_usage" type="number" />
+      <label>Thời Gian Sử Dụng</label>
+      <input id="period" type="number" placeholder="e.g., 3, 6, 12, 24, 36" />
+      <label>Người Tạo</label>
+      <select id="created_by">
+        <option value="">(select employee)</option>
+      </select>
+      <button id="saveBtn">TẠO MỚI</button>
     </div>
 
     <div class="card">
-      <h3>Items (recent)</h3>
+      <h3>Sản Phẩm Tạo Gần Đây</h3>
       <div id="listContainer">Loading…</div>
     </div>
   </div>
@@ -71,12 +61,35 @@
 const { createClient } = supabase;
 let client = null; let state = { entries: [] };
 function setStatus(msg){const el=document.getElementById('listContainer'); if(typeof msg==='string') el.innerText=msg}
-async function connect(url,key){const cleanUrl=(url||'').trim().replace(/\/+$/,''); const cleanKey=(key||'').trim(); client = createClient(cleanUrl, cleanKey); await loadEntries();}
+async function connect(url,key){const cleanUrl=(url||'').trim().replace(/\/+$/,''); const cleanKey=(key||'').trim(); client = createClient(cleanUrl, cleanKey); await Promise.all([loadEntries(), loadEmployeeNames()]);}
+async function loadEmployeeNames(){
+  const select = document.getElementById('created_by');
+  if (!select || !client) return;
+  select.innerHTML = '<option value="">(select employee)</option>';
+  try {
+    const { data, error } = await client.from('employee').select('name').order('name', { ascending: true });
+    if (error) throw error;
+    const names = (data || []).map(r => r.name).filter(Boolean);
+    if (!names.length) {
+      select.innerHTML = '<option value="">No employees found</option>';
+      return;
+    }
+    names.forEach(name => {
+      const option = document.createElement('option');
+      option.value = name;
+      option.textContent = name;
+      select.appendChild(option);
+    });
+  } catch (err) {
+    console.warn('Could not load employee names:', err);
+    select.innerHTML = '<option value="">Could not load employees</option>';
+  }
+}
 async function loadEntries(){ setStatus('Loading…'); try{ const { data, error } = await client.from('items').select('*').order('created_at',{ascending:false}).limit(50); if(error) throw error; state.entries = data || []; renderList(); }catch(err){ setStatus('Could not load: '+err.message) } }
 function renderList(){const container=document.getElementById('listContainer'); if(!state.entries.length){container.innerHTML='<div class="small">No items yet.</div>';return} container.innerHTML=`<ul class="entries">${state.entries.map(e=>`<li class="entry"><div style="display:flex;justify-content:space-between"><div><strong>${escapeHtml(e.name||'')}</strong><div class="meta">${escapeHtml(e.item_group||'')} / ${escapeHtml(e.item_sub_group||'')} · ${e.price!=null?('Price: '+e.price):''}</div></div><div><button data-id="${e.id}" class="delBtn">Delete</button></div></div></li>`).join('')}</ul>`; Array.from(document.getElementsByClassName('delBtn')).forEach(b=>b.addEventListener('click',handleDelete));}
 function escapeHtml(s){return String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]))}
 async function handleDelete(e){const id=e.currentTarget.getAttribute('data-id'); if(!confirm('Delete this item?')) return; try{ const { error } = await client.from('items').delete().eq('id', id); if(error) throw error; await loadEntries(); }catch(err){ alert('Delete failed: '+err.message) }}
-async function handleSave(){ const payload={ name:document.getElementById('name').value.trim(), item_group:document.getElementById('group').value.trim(), item_sub_group:document.getElementById('subgroup').value.trim(), price:parseFloat(document.getElementById('price').value)||0, number_of_usage:parseInt(document.getElementById('number_of_usage').value)||0, period:document.getElementById('period').value.trim(), created_by:document.getElementById('created_by').value.trim() }; if(!payload.name){ alert('Name required'); return } try{ const { error } = await client.from('items').insert([payload]); if(error) throw error; document.getElementById('name').value=''; document.getElementById('group').value=''; document.getElementById('subgroup').value=''; document.getElementById('price').value=''; await loadEntries(); }catch(err){ alert('Save failed: '+err.message) } }
+async function handleSave(){ const payload={ name:document.getElementById('name').value.trim(), item_group:document.getElementById('group').value.trim(), item_sub_group:document.getElementById('subgroup').value.trim(), price:parseFloat(document.getElementById('price').value)||0, number_of_usage:parseInt(document.getElementById('number_of_usage').value)||0, period:document.getElementById('period').value.trim(), created_by:document.getElementById('created_by').value.trim() }; if(!payload.name){ alert('Name required'); return } if(!payload.created_by){ alert('Please select an employee for Created By'); return } try{ const { error } = await client.from('items').insert([payload]); if(error) throw error; document.getElementById('name').value=''; document.getElementById('group').value=''; document.getElementById('subgroup').value=''; document.getElementById('price').value=''; document.getElementById('number_of_usage').value=''; document.getElementById('period').value=''; document.getElementById('created_by').value=''; await loadEntries(); }catch(err){ alert('Save failed: '+err.message) } }
 function autoConnect(){
   if (typeof window.ENV_SUPABASE_URL !== 'undefined' && typeof window.ENV_SUPABASE_KEY !== 'undefined') {
     const url = window.ENV_SUPABASE_URL, key = window.ENV_SUPABASE_KEY;
