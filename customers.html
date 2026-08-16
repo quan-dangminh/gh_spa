@@ -135,9 +135,9 @@
                 <th>Phone</th>
                 <th>Email</th>
                 <th>Gender</th>
-                <th>DOB</th>
+                <th>Description</th>
                 <th>Created By</th>
-                <th style="width: 130px;">Actions</th>
+                <!-- <th style="width: 130px;">Actions</th> -->
               </tr>
             </thead>
             <tbody id="rowsBody"></tbody>
@@ -179,14 +179,10 @@
             <label>Gender</label>
             <select name="gender">
               <option value="">(select)</option>
-              <option>Male</option>
-              <option>Female</option>
-              <option>Other</option>
+              <option>Nam</option>
+              <option>Nữ</option>
+              <option>Khác</option>
             </select>
-          </div>
-          <div class="form-field">
-            <label>Date of Birth</label>
-            <input name="dob" type="date" />
           </div>
           <div class="form-field">
             <label>Created By</label>
@@ -295,13 +291,8 @@
           <td>${escapeHtml(row.phone || '—')}</td>
           <td>${escapeHtml(row.email || '—')}</td>
           <td>${escapeHtml(row.gender || '—')}</td>
-          <td>${row.dob ? new Date(row.dob).toLocaleDateString() : '—'}</td>
+          <td>${escapeHtml(row.description || '—')}</td>
           <td>${escapeHtml(row.created_by || '—')}</td>
-          <td>
-            <div class="row-actions">
-              <button class="mini-btn delete" data-action="delete" data-id="${row.id}">Delete</button>
-            </div>
-          </td>
         </tr>
       `).join('');
 
@@ -339,7 +330,6 @@
           <div class="field full" style="grid-column:1 / -1;"><span class="field-label">Address</span><span class="field-value">${escapeHtml(selected.address || '—')}</span></div>
           <div class="field"><span class="field-label">Email</span><span class="field-value">${escapeHtml(selected.email || '—')}</span></div>
           <div class="field"><span class="field-label">Gender</span><span class="field-value">${escapeHtml(selected.gender || '—')}</span></div>
-          <div class="field"><span class="field-label">DOB</span><span class="field-value">${selected.dob ? new Date(selected.dob).toLocaleDateString() : '—'}</span></div>
           <div class="field"><span class="field-label">Created By</span><span class="field-value">${escapeHtml(selected.created_by || '—')}</span></div>
           <div class="field"><span class="field-label">Created</span><span class="field-value">${selected.created_at ? new Date(selected.created_at).toLocaleDateString() : '—'}</span></div>
         </div>
@@ -374,7 +364,6 @@
       form.address.value = row ? (row.address || '') : '';
       form.email.value = row ? (row.email || '') : '';
       form.gender.value = row ? (row.gender || '') : '';
-      form.dob.value = row ? (row.dob || '') : '';
       form.created_by.value = row ? (row.created_by || getCurrentUserLabel()) : getCurrentUserLabel();
       modal.classList.add('open');
     }
@@ -394,7 +383,6 @@
         address: form.address.value.trim(),
         email: form.email.value.trim(),
         gender: form.gender.value,
-        dob: form.dob.value,
         created_by: form.created_by.value.trim()
       };
       if (!payload.name) { alert('Name is required.'); return; }

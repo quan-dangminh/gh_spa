@@ -139,8 +139,6 @@
                 <th>Department</th>
                 <th>Phone</th>
                 <th>Email</th>
-                <!-- <th>Status</th> -->
-                <th style="width: 130px;">Actions</th>
               </tr>
             </thead>
             <tbody id="rowsBody"></tbody>
@@ -177,10 +175,6 @@
           <div class="form-field">
             <label>Email</label>
             <input name="email" type="email" />
-          </div>
-          <div class="form-field full">
-            <label>Address</label>
-            <input name="address" />
           </div>
         </div>
         <div class="modal-actions">
@@ -293,11 +287,6 @@
           <td>${escapeHtml(row.jobTitle || '—')}</td>
           <td>${escapeHtml(row.phone || '—')}</td>
           <td>${escapeHtml(row.email || '—')}</td>
-          <td>
-            <div class="row-actions">
-              <button class="mini-btn delete" data-action="delete" data-id="${row.id}">Delete</button>
-            </div>
-          </td>
         </tr>
       `).join('');
 
@@ -344,11 +333,9 @@
         </div>
         <div class="detail-body">
           <div class="detail-info-grid">
-            <div class="field"><span class="field-label">Employee ID</span><span class="field-value">${escapeHtml(selected.id || '—')}</span></div>
             <div class="field"><span class="field-label">Department</span><span class="field-value">${escapeHtml(selected.jobTitle || '—')}</span></div>
             <div class="field"><span class="field-label">Phone</span><span class="field-value">${escapeHtml(selected.phone || '—')}</span></div>
             <div class="field"><span class="field-label">Email</span><span class="field-value">${escapeHtml(selected.email || '—')}</span></div>
-            <div class="field full" style="grid-column: 1 / -1;"><span class="field-label">Address</span><span class="field-value">${escapeHtml(selected.address || '—')}</span></div>
             <div class="field"><span class="field-label">Created</span><span class="field-value">${selected.created_at ? new Date(selected.created_at).toLocaleDateString() : '—'}</span></div>
           </div>
           <div class="panel-actions">
@@ -384,7 +371,6 @@
       form.jobTitle.value = row ? (row.jobTitle || '') : '';
       form.phone.value = row ? (row.phone || '') : '';
       form.email.value = row ? (row.email || '') : '';
-      form.address.value = row ? (row.address || '') : '';
       modal.classList.add('open');
       state.modalOpen = true;
     }
@@ -404,8 +390,7 @@
         name: form.name.value.trim(),
         jobTitle: form.jobTitle.value.trim(),
         phone: form.phone.value.trim(),
-        email: form.email.value.trim(),
-        address: form.address.value.trim()
+        email: form.email.value.trim()
       };
 
       if (!payload.name || !payload.jobTitle) {
