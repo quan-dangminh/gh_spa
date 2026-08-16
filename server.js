@@ -27,7 +27,13 @@ app.get('/', (req, res) => {
 });
 
 app.get('/employee', (req, res) => {
-  let html = fs.readFileSync(path.join(__dirname, 'employees.html'), 'utf8');
+  let html = fs.readFileSync(path.join(__dirname, 'employee_input_form.html'), 'utf8');
+  html = injectEnvVars(html);
+  res.send(html);
+});
+
+app.get('/employees', (req, res) => {
+  let html = fs.readFileSync(path.join(__dirname, 'employee_input_form.html'), 'utf8');
   html = injectEnvVars(html);
   res.send(html);
 });

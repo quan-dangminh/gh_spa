@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Customers</title>
+  <title>Employees</title>
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
   <style>
     :root {
@@ -17,10 +17,12 @@
       --border: #e3e8ef;
       --text: #1f2f3f;
       --muted: #69798c;
-      --accent: #4fc39b;
-      --accent-soft: #e9fff4;
+      --accent: #4d9ad6;
+      --accent-soft: #e5f2ff;
       --danger: #d76161;
       --danger-soft: #fff0f0;
+      --success: #3ab67d;
+      --success-soft: #eafaf3;
       --shadow: 0 8px 22px rgba(16, 31, 51, 0.08);
     }
     * { box-sizing: border-box; }
@@ -29,7 +31,7 @@
     .app { display: flex; min-height: 100vh; }
     .sidebar { width: 230px; background: linear-gradient(180deg, var(--sidebar-bg), var(--sidebar-bg-2)); color: var(--sidebar-text); padding: 18px 16px 14px; display: flex; flex-direction: column; }
     .brand { display: flex; align-items: center; gap: 10px; padding: 4px 6px 18px; border-bottom: 1px solid rgba(255,255,255,0.08); }
-    .brand-mark { width: 22px; height: 22px; border-radius: 8px; background: linear-gradient(135deg, #3bbd9a, #78e0b7); position: relative; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.2); }
+    .brand-mark { width: 22px; height: 22px; border-radius: 8px; background: linear-gradient(135deg, #4f89ff, #5fe2ff); position: relative; box-shadow: inset 0 0 0 1px rgba(255,255,255,0.2); }
     .brand-mark::before { content: ''; position: absolute; inset: 0; transform: rotate(45deg) scale(.72); border-radius: 7px; background: rgba(255,255,255,0.15); }
     .brand-name { font-size: 1.1rem; font-weight: 700; }
     .nav { margin-top: 18px; display: flex; flex-direction: column; gap: 6px; }
@@ -48,7 +50,7 @@
     .search { display: flex; align-items: center; gap: 8px; width: 260px; background: rgba(255,255,255,0.7); border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; color: var(--muted); }
     .search input { width: 100%; border: none; outline: none; background: transparent; font-size: 0.95rem; }
     .primary-btn, .secondary-btn, .danger-btn { border: none; border-radius: 10px; padding: 11px 18px; font-size: 0.96rem; font-weight: 700; cursor: pointer; }
-    .primary-btn { background: var(--accent); color: #fff; box-shadow: 0 6px 16px rgba(79,195,155,0.25); }
+    .primary-btn { background: var(--accent); color: #fff; box-shadow: 0 6px 16px rgba(77,154,214,0.25); }
     .secondary-btn { background: var(--accent-soft); color: var(--accent); }
     .danger-btn { background: var(--danger-soft); color: var(--danger); }
     .workspace { display: grid; grid-template-columns: minmax(0, 1.5fr) minmax(300px, 0.7fr); gap: 18px; }
@@ -58,6 +60,9 @@
     thead th { text-align: left; font-size: 0.8rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); background: #f8fafc; border-bottom: 1px solid var(--border); padding: 12px 14px; }
     tbody td { padding: 14px; border-bottom: 1px solid var(--border); font-size: 0.96rem; }
     tbody tr:hover { background: #fafcff; }
+    .status-pill { display: inline-flex; align-items: center; justify-content: center; padding: 5px 9px; border-radius: 999px; font-size: 0.75rem; font-weight: 700; }
+    .status-pill.active { background: var(--success-soft); color: var(--success); }
+    .status-pill.inactive { background: #f4f5f7; color: var(--muted); }
     .row-actions { display: flex; justify-content: flex-end; gap: 8px; }
     .mini-btn { border: none; padding: 7px 10px; border-radius: 8px; font-weight: 700; cursor: pointer; }
     .mini-btn.edit { background: var(--accent-soft); color: var(--accent); }
@@ -65,6 +70,8 @@
     .detail-card { min-height: 420px; padding: 18px; }
     .detail-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
     .detail-header h3 { margin: 0; font-size: 1.08rem; }
+    .detail-body { display: grid; gap: 12px; }
+    .avatar-big { width: 52px; height: 52px; border-radius: 50%; background: linear-gradient(135deg, #dfeeff, #80b0e6); color: var(--accent); display: grid; place-items: center; font-weight: 700; font-size: 1.3rem; }
     .detail-empty { color: var(--muted); line-height: 1.6; }
     .detail-info-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
     .field { background: #f7f9fb; border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; }
@@ -75,7 +82,7 @@
     .panel-actions .danger-btn { flex: 1; }
     .modal { position: fixed; inset: 0; background: rgba(15, 23, 31, 0.46); display: none; align-items: center; justify-content: center; padding: 20px; }
     .modal.open { display: flex; }
-    .modal-box { width: min(760px, 100%); background: white; border-radius: 18px; box-shadow: 0 24px 60px rgba(0,0,0,0.2); padding: 20px 22px; }
+    .modal-box { width: min(720px, 100%); background: white; border-radius: 18px; box-shadow: 0 24px 60px rgba(0,0,0,0.2); padding: 20px 22px; }
     .modal-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
     .modal-header h2 { margin: 0; font-size: 1.5rem; letter-spacing: -0.04em; }
     .close-btn { border: none; background: transparent; font-size: 1.7rem; color: var(--muted); cursor: pointer; }
@@ -98,8 +105,8 @@
       </div>
       <nav class="nav">
         <a href="/"><span class="nav-icon">⌂</span>Dashboard</a>
-        <a href="/employee"><span class="nav-icon">👥</span>Employees</a>
-        <a href="/customers" class="active"><span class="nav-icon">👤</span>Customers</a>
+        <a href="/employee" class="active"><span class="nav-icon">👥</span>Employees</a>
+        <a href="/customers"><span class="nav-icon">👤</span>Customers</a>
         <a href="/items"><span class="nav-icon">▣</span>Items</a>
         <a href="/invoices"><span class="nav-icon">🧾</span>Invoices</a>
         <div class="divider"></div>
@@ -117,10 +124,10 @@
 
     <main class="content">
       <div class="toolbar">
-        <h1>Customers</h1>
+        <h1>Employees</h1>
         <div class="actions">
-          <label class="search"><span>⌕</span><input id="searchInput" placeholder="Search customers..." /></label>
-          <button class="primary-btn" id="addBtn">+ Add Customer</button>
+          <label class="search"><span>⌕</span><input id="searchInput" placeholder="Search employees..." /></label>
+          <button class="primary-btn" id="addBtn">+ Add Employee</button>
         </div>
       </div>
 
@@ -130,11 +137,10 @@
             <thead>
               <tr>
                 <th>Name</th>
+                <th>Department</th>
                 <th>Phone</th>
                 <th>Email</th>
-                <th>Gender</th>
-                <th>DOB</th>
-                <th>Created By</th>
+                <th>Status</th>
                 <th style="width: 130px;">Actions</th>
               </tr>
             </thead>
@@ -143,7 +149,7 @@
         </div>
 
         <aside class="detail-card" id="detailCard">
-          <div class="detail-empty">Select a customer to view details and actions.</div>
+          <div class="detail-empty">Select an employee to view details and actions.</div>
         </aside>
       </div>
     </main>
@@ -152,43 +158,30 @@
   <div class="modal" id="modal">
     <div class="modal-box">
       <div class="modal-header">
-        <h2 id="modalTitle">Add Customer</h2>
+        <h2 id="modalTitle">Add Employee</h2>
         <button class="close-btn" id="closeModalBtn" aria-label="Close">×</button>
       </div>
-      <form id="customerForm">
+      <form id="employeeForm">
         <div class="form-grid">
           <div class="form-field">
-            <label>Customer Name</label>
+            <label>Full Name</label>
             <input name="name" required />
+          </div>
+          <div class="form-field">
+            <label>Department</label>
+            <input name="jobTitle" required />
           </div>
           <div class="form-field">
             <label>Phone</label>
             <input name="phone" />
           </div>
-          <div class="form-field full">
-            <label>Address</label>
-            <input name="address" />
-          </div>
           <div class="form-field">
             <label>Email</label>
             <input name="email" type="email" />
           </div>
-          <div class="form-field">
-            <label>Gender</label>
-            <select name="gender">
-              <option value="">(select)</option>
-              <option>Male</option>
-              <option>Female</option>
-              <option>Other</option>
-            </select>
-          </div>
-          <div class="form-field">
-            <label>Date of Birth</label>
-            <input name="dob" type="date" />
-          </div>
-          <div class="form-field">
-            <label>Created By</label>
-            <input name="created_by" />
+          <div class="form-field full">
+            <label>Address</label>
+            <input name="address" />
           </div>
         </div>
         <div class="modal-actions">
@@ -202,10 +195,17 @@
   <script>
     const { createClient } = supabase;
     let client = null;
-    let state = { rows: [], selectedId: null, editingId: null, modalOpen: false, search: '' };
+    let state = {
+      rows: [],
+      selectedId: null,
+      modalOpen: false,
+      editingId: null,
+      search: ''
+    };
 
     function setStatus(msg) {
-      document.getElementById('detailCard').innerHTML = '<div class="detail-empty">' + escapeHtml(msg) + '</div>';
+      const detailCard = document.getElementById('detailCard');
+      detailCard.innerHTML = '<div class="detail-empty">' + escapeHtml(msg) + '</div>';
     }
 
     async function connect(url, key) {
@@ -216,36 +216,41 @@
     async function loadRows() {
       if (!client) return;
       try {
-        const { data, error } = await client.from('customers').select('*').order('created_at', { ascending: false });
+        const { data, error } = await client.from('employee').select('*').order('created_at', { ascending: false });
         if (error) throw error;
         state.rows = data || [];
-        if (!state.rows.length) state.selectedId = null;
-        else if (!state.selectedId || !state.rows.some(r => String(r.id) === String(state.selectedId))) state.selectedId = state.rows[0].id;
+        if (!state.rows.length) {
+          state.selectedId = null;
+        } else if (!state.selectedId || !state.rows.some(r => String(r.id) === String(state.selectedId))) {
+          state.selectedId = state.rows[0].id;
+        }
         renderTable();
         renderDetail();
       } catch (err) {
-        setStatus('Could not load customers: ' + err.message);
+        setStatus('Could not load employees: ' + err.message);
       }
     }
 
     function renderTable() {
       const rowsBody = document.getElementById('rowsBody');
+      const search = state.search.trim().toLowerCase();
       const filtered = state.rows.filter(row => {
-        const text = [row.name, row.phone, row.email, row.gender, row.address, row.created_by].join(' ').toLowerCase();
-        return text.includes(state.search.trim().toLowerCase());
+        const haystack = [row.name, row.jobTitle, row.phone, row.email].join(' ').toLowerCase();
+        return haystack.includes(search);
       });
+
       if (!filtered.length) {
-        rowsBody.innerHTML = '<tr><td colspan="7" style="padding:20px;color:#69798c;">No customers found.</td></tr>';
+        rowsBody.innerHTML = '<tr><td colspan="6" style="padding:20px;color:#69798c;">No employees found.</td></tr>';
         return;
       }
+
       rowsBody.innerHTML = filtered.map((row) => `
-        <tr data-id="${row.id}" style="${String(state.selectedId) === String(row.id) ? 'background:#f7fbff;' : ''}">
+        <tr data-id="${row.id}" class="${String(state.selectedId) === String(row.id) ? 'selected-row' : ''}" style="${String(state.selectedId) === String(row.id) ? 'background:#f7fbff;' : ''}">
           <td><strong>${escapeHtml(row.name || '—')}</strong></td>
+          <td>${escapeHtml(row.jobTitle || '—')}</td>
           <td>${escapeHtml(row.phone || '—')}</td>
           <td>${escapeHtml(row.email || '—')}</td>
-          <td>${escapeHtml(row.gender || '—')}</td>
-          <td>${row.dob ? new Date(row.dob).toLocaleDateString() : '—'}</td>
-          <td>${escapeHtml(row.created_by || '—')}</td>
+          <td><span class="status-pill ${row.active === false ? 'inactive' : 'active'}">${row.active === false ? 'Inactive' : 'Active'}</span></td>
           <td>
             <div class="row-actions">
               <button class="mini-btn edit" data-action="edit" data-id="${row.id}">Edit</button>
@@ -255,60 +260,78 @@
         </tr>
       `).join('');
 
-      rowsBody.querySelectorAll('tr[data-id]').forEach(tr => tr.addEventListener('click', (e) => {
-        if (e.target.closest('button')) return;
-        state.selectedId = tr.dataset.id;
-        renderTable();
-        renderDetail();
-      }));
-      rowsBody.querySelectorAll('button[data-action="edit"]').forEach(btn => btn.addEventListener('click', (e) => {
-        e.stopPropagation();
-        openModal('Edit Customer', btn.dataset.id);
-      }));
-      rowsBody.querySelectorAll('button[data-action="delete"]').forEach(btn => btn.addEventListener('click', async (e) => {
-        e.stopPropagation();
-        if (!confirm('Warning: Deleting this customer is permanent. Continue?')) return;
-        try {
-          const { error } = await client.from('customers').delete().eq('id', btn.dataset.id);
-          if (error) throw error;
-          await loadRows();
-        } catch (err) { alert('Delete failed: ' + err.message); }
-      }));
+      rowsBody.querySelectorAll('tr[data-id]').forEach(row => {
+        row.addEventListener('click', (e) => {
+          if (e.target.closest('button')) return;
+          state.selectedId = row.dataset.id;
+          renderTable();
+          renderDetail();
+        });
+      });
+
+      rowsBody.querySelectorAll('button[data-action="edit"]').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const id = btn.dataset.id;
+          openModal('Edit Employee', id);
+        });
+      });
+
+      rowsBody.querySelectorAll('button[data-action="delete"]').forEach(btn => {
+        btn.addEventListener('click', async (e) => {
+          e.stopPropagation();
+          const id = btn.dataset.id;
+          if (!confirm('Warning: Deleting this employee is permanent. Continue?')) return;
+          try {
+            const { error } = await client.from('employee').delete().eq('id', id);
+            if (error) throw error;
+            await loadRows();
+          } catch (err) { alert('Delete failed: ' + err.message); }
+        });
+      });
     }
 
     function renderDetail() {
       const detailCard = document.getElementById('detailCard');
-      const selected = state.rows.find(r => String(r.id) === String(state.selectedId));
+      const selected = state.rows.find(row => String(row.id) === String(state.selectedId));
       if (!selected) {
-        detailCard.innerHTML = '<div class="detail-empty">Select a customer to view details and actions.</div>';
+        detailCard.innerHTML = '<div class="detail-empty">Select an employee to view details and actions.</div>';
         return;
       }
+
       detailCard.innerHTML = `
         <div class="detail-header">
-          <h3>${escapeHtml(selected.name || 'Customer')}</h3>
+          <div style="display:flex;align-items:center;gap:12px;">
+            <div class="avatar-big">${escapeHtml((selected.name || 'E').charAt(0).toUpperCase())}</div>
+            <div>
+              <h3>${escapeHtml(selected.name || 'Employee')}</h3>
+            </div>
+          </div>
           <button class="secondary-btn" id="detailEditBtn">Edit</button>
         </div>
-        <div class="detail-info-grid">
-          <div class="field"><span class="field-label">Name</span><span class="field-value">${escapeHtml(selected.name || '—')}</span></div>
-          <div class="field"><span class="field-label">Phone</span><span class="field-value">${escapeHtml(selected.phone || '—')}</span></div>
-          <div class="field full" style="grid-column:1 / -1;"><span class="field-label">Address</span><span class="field-value">${escapeHtml(selected.address || '—')}</span></div>
-          <div class="field"><span class="field-label">Email</span><span class="field-value">${escapeHtml(selected.email || '—')}</span></div>
-          <div class="field"><span class="field-label">Gender</span><span class="field-value">${escapeHtml(selected.gender || '—')}</span></div>
-          <div class="field"><span class="field-label">DOB</span><span class="field-value">${selected.dob ? new Date(selected.dob).toLocaleDateString() : '—'}</span></div>
-          <div class="field"><span class="field-label">Created By</span><span class="field-value">${escapeHtml(selected.created_by || '—')}</span></div>
-          <div class="field"><span class="field-label">Created</span><span class="field-value">${selected.created_at ? new Date(selected.created_at).toLocaleDateString() : '—'}</span></div>
-        </div>
-        <div class="panel-actions">
-          <button class="secondary-btn" id="detailEditFooterBtn">Edit</button>
-          <button class="danger-btn" id="detailDeleteBtn">Delete</button>
+        <div class="detail-body">
+          <div class="detail-info-grid">
+            <div class="field"><span class="field-label">Employee ID</span><span class="field-value">${escapeHtml(selected.id || '—')}</span></div>
+            <div class="field"><span class="field-label">Department</span><span class="field-value">${escapeHtml(selected.jobTitle || '—')}</span></div>
+            <div class="field"><span class="field-label">Phone</span><span class="field-value">${escapeHtml(selected.phone || '—')}</span></div>
+            <div class="field"><span class="field-label">Email</span><span class="field-value">${escapeHtml(selected.email || '—')}</span></div>
+            <div class="field full" style="grid-column: 1 / -1;"><span class="field-label">Address</span><span class="field-value">${escapeHtml(selected.address || '—')}</span></div>
+            <div class="field"><span class="field-label">Created</span><span class="field-value">${selected.created_at ? new Date(selected.created_at).toLocaleDateString() : '—'}</span></div>
+            <div class="field"><span class="field-label">Status</span><span class="field-value">${selected.active === false ? 'Inactive' : 'Active'}</span></div>
+          </div>
+          <div class="panel-actions">
+            <button class="secondary-btn" id="detailEditFooterBtn">Edit</button>
+            <button class="danger-btn" id="detailDeleteBtn">Delete</button>
+          </div>
         </div>
       `;
-      document.getElementById('detailEditBtn').addEventListener('click', () => openModal('Edit Customer', selected.id));
-      document.getElementById('detailEditFooterBtn').addEventListener('click', () => openModal('Edit Customer', selected.id));
+
+      document.getElementById('detailEditBtn').addEventListener('click', () => openModal('Edit Employee', selected.id));
+      document.getElementById('detailEditFooterBtn').addEventListener('click', () => openModal('Edit Employee', selected.id));
       document.getElementById('detailDeleteBtn').addEventListener('click', async () => {
-        if (!confirm('Warning: Deleting this customer is permanent. Continue?')) return;
+        if (!confirm('Warning: Deleting this employee is permanent. Continue?')) return;
         try {
-          const { error } = await client.from('customers').delete().eq('id', selected.id);
+          const { error } = await client.from('employee').delete().eq('id', selected.id);
           if (error) throw error;
           await loadRows();
         } catch (err) { alert('Delete failed: ' + err.message); }
@@ -321,59 +344,71 @@
 
     function openModal(title, id = null) {
       const modal = document.getElementById('modal');
-      const form = document.getElementById('customerForm');
-      const row = state.rows.find(r => String(r.id) === String(id));
-      document.getElementById('modalTitle').textContent = title;
+      const titleEl = document.getElementById('modalTitle');
+      titleEl.textContent = title;
       state.editingId = id;
+      const form = document.getElementById('employeeForm');
+      const row = state.rows.find(r => String(r.id) === String(id));
       form.name.value = row ? (row.name || '') : '';
+      form.jobTitle.value = row ? (row.jobTitle || '') : '';
       form.phone.value = row ? (row.phone || '') : '';
-      form.address.value = row ? (row.address || '') : '';
       form.email.value = row ? (row.email || '') : '';
-      form.gender.value = row ? (row.gender || '') : '';
-      form.dob.value = row ? (row.dob || '') : '';
-      form.created_by.value = row ? (row.created_by || '') : '';
+      form.address.value = row ? (row.address || '') : '';
       modal.classList.add('open');
+      state.modalOpen = true;
     }
 
     function closeModal() {
-      document.getElementById('modal').classList.remove('open');
+      const modal = document.getElementById('modal');
+      modal.classList.remove('open');
+      state.modalOpen = false;
       state.editingId = null;
-      document.getElementById('customerForm').reset();
+      document.getElementById('employeeForm').reset();
     }
 
-    async function submitCustomer(e) {
+    async function submitEmployee(e) {
       e.preventDefault();
       const form = e.target;
       const payload = {
         name: form.name.value.trim(),
+        jobTitle: form.jobTitle.value.trim(),
         phone: form.phone.value.trim(),
-        address: form.address.value.trim(),
         email: form.email.value.trim(),
-        gender: form.gender.value,
-        dob: form.dob.value,
-        created_by: form.created_by.value.trim()
+        address: form.address.value.trim(),
+        active: true
       };
-      if (!payload.name) { alert('Name is required.'); return; }
-      const proceed = confirm(state.editingId ? 'Warning: Saving changes will update this customer record. Continue?' : 'Warning: Creating this customer will add a new record. Continue?');
-      if (!proceed) return;
+
+      if (!payload.name || !payload.jobTitle) {
+        alert('Name and Department are required.');
+        return;
+      }
+
+      const shouldSave = confirm(state.editingId ? 'Warning: Saving changes will update this employee record. Continue?' : 'Warning: Creating this employee will add a new record. Continue?');
+      if (!shouldSave) return;
+
       try {
         if (state.editingId) {
-          const { error } = await client.from('customers').update(payload).eq('id', state.editingId);
+          const { error } = await client.from('employee').update(payload).eq('id', state.editingId);
           if (error) throw error;
         } else {
-          const { error } = await client.from('customers').insert([payload]);
+          const { error } = await client.from('employee').insert([payload]);
           if (error) throw error;
         }
         closeModal();
         await loadRows();
-      } catch (err) { alert('Save failed: ' + err.message); }
+      } catch (err) {
+        alert('Save failed: ' + err.message);
+      }
     }
 
-    document.getElementById('addBtn').addEventListener('click', () => openModal('Add Customer'));
+    document.getElementById('addBtn').addEventListener('click', () => openModal('Add Employee'));
     document.getElementById('closeModalBtn').addEventListener('click', closeModal);
     document.getElementById('cancelModalBtn').addEventListener('click', closeModal);
-    document.getElementById('customerForm').addEventListener('submit', submitCustomer);
-    document.getElementById('searchInput').addEventListener('input', (e) => { state.search = e.target.value; renderTable(); });
+    document.getElementById('employeeForm').addEventListener('submit', submitEmployee);
+    document.getElementById('searchInput').addEventListener('input', (e) => {
+      state.search = e.target.value;
+      renderTable();
+    });
 
     function autoConnect() {
       if (typeof window.ENV_SUPABASE_URL !== 'undefined' && typeof window.ENV_SUPABASE_KEY !== 'undefined') {
