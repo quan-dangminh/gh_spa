@@ -1,0 +1,1024 @@
+/* ============================================================================
+   BizFlow & GH Spa - Reusable Design System & Stylesheet
+   
+   This stylesheet provides a complete design system with:
+   - CSS custom properties for consistent theming
+   - Modular component styles
+   - Responsive utilities
+   - Accessible form elements
+   
+   Usage: Link this file in your HTML <head> and apply the class names to your elements
+   ============================================================================ */
+
+/* ============================================================================
+   1. DESIGN TOKENS & CSS VARIABLES
+   ============================================================================ */
+
+:root {
+  /* Color Palette - Primary */
+  --primary: #1f5eff;
+  --primary-soft: #eaf1ff;
+  --primary-dark: #0a3ad1;
+  
+  /* Color Palette - Semantic */
+  --success: #4ec194;
+  --success-soft: #dcf7eb;
+  --danger: #d76161;
+  --danger-soft: #fff0f0;
+  --warning: #f1a96a;
+  --warning-soft: #fdebd8;
+  --info: #7bb8de;
+  --info-soft: #dfeefd;
+  
+  /* Neutrals - Login Page */
+  --login-bg: #edf2f7;
+  --login-card: #ffffff;
+  --login-text: #1b2430;
+  --login-muted: #69798c;
+  --login-line: #dde6ef;
+  
+  /* Neutrals - Dashboard */
+  --dash-bg: #eef2f5;
+  --dash-panel: #f4f6f8;
+  --dash-card: #ffffff;
+  --dash-text: #1f2d3d;
+  --dash-muted: #6e7b8b;
+  --dash-border: #e3e8ef;
+  
+  /* Sidebar */
+  --sidebar-bg: #0f2036;
+  --sidebar-bg-alt: #152c46;
+  --sidebar-text: #dfe8f4;
+  --sidebar-muted: #a7b7d1;
+  
+  /* Shadows */
+  --shadow-sm: 0 2px 8px rgba(17, 26, 38, 0.04);
+  --shadow-md: 0 10px 28px rgba(17, 26, 38, 0.06);
+  --shadow-lg: 0 24px 60px rgba(11, 30, 52, 0.08);
+  --shadow-xl: 0 24px 60px rgba(0, 0, 0, 0.2);
+  
+  /* Typography */
+  --font-family: Arial, Helvetica, sans-serif;
+  --font-size-xs: 0.7rem;
+  --font-size-sm: 0.8rem;
+  --font-size-base: 0.95rem;
+  --font-size-lg: 1rem;
+  --font-size-xl: 1.5rem;
+  --font-size-2xl: 2rem;
+  --font-size-3xl: 2.5rem;
+  
+  --font-weight-normal: 400;
+  --font-weight-bold: 700;
+  
+  /* Spacing */
+  --space-xs: 4px;
+  --space-sm: 8px;
+  --space-md: 12px;
+  --space-lg: 16px;
+  --space-xl: 18px;
+  --space-2xl: 24px;
+  --space-3xl: 28px;
+  --space-4xl: 32px;
+  
+  /* Border Radius */
+  --radius-sm: 8px;
+  --radius-md: 10px;
+  --radius-lg: 12px;
+  --radius-xl: 16px;
+  --radius-2xl: 24px;
+  
+  /* Transitions */
+  --transition-fast: 150ms ease;
+  --transition-base: 200ms ease;
+  --transition-slow: 300ms ease;
+  
+  /* Z-Index */
+  --z-base: 1;
+  --z-overlay: 100;
+  --z-modal: 200;
+  --z-tooltip: 300;
+}
+
+/* ============================================================================
+   2. BASE & RESET STYLES
+   ============================================================================ */
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+  color: var(--login-text);
+  background: var(--login-bg);
+  line-height: 1.5;
+}
+
+a {
+  color: inherit;
+  text-decoration: none;
+  transition: color var(--transition-fast);
+}
+
+a:hover {
+  opacity: 0.8;
+}
+
+/* ============================================================================
+   3. LOGIN PAGE STYLES
+   ============================================================================ */
+
+.login-shell {
+  width: min(460px, calc(100vw - var(--space-xl)));
+  min-height: 100vh;
+  display: grid;
+  place-items: center;
+  padding: var(--space-lg) 0;
+}
+
+body.login-page {
+  background: linear-gradient(135deg, #eef5ff, #f5f7fb 40%, #edf2f7 100%);
+  display: grid;
+  place-items: center;
+  min-height: 100vh;
+}
+
+.login-card {
+  background: var(--login-card);
+  border: 1px solid var(--login-line);
+  border-radius: var(--radius-2xl);
+  box-shadow: var(--shadow-lg);
+  padding: var(--space-4xl) calc(var(--space-4xl) - 4px);
+  animation: slideUp var(--transition-slow) ease;
+}
+
+@keyframes slideUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* ============================================================================
+   4. BRAND & HEADER COMPONENTS
+   ============================================================================ */
+
+.brand {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-md);
+  margin-bottom: var(--space-xl);
+}
+
+.brand-mark {
+  width: 28px;
+  height: 28px;
+  border-radius: var(--radius-md);
+  background: linear-gradient(135deg, #4f89ff, #5fe2ff);
+  position: relative;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.2);
+}
+
+.brand-mark::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  transform: rotate(45deg) scale(0.72);
+  border-radius: 7px;
+  background: rgba(255, 255, 255, 0.18);
+}
+
+.brand-name {
+  font-weight: var(--font-weight-bold);
+  font-size: var(--font-size-xl);
+  letter-spacing: -0.04em;
+  line-height: 1;
+}
+
+h1 {
+  margin: 0 0 var(--space-md);
+  font-size: clamp(2rem, 3vw, 2.5rem);
+  letter-spacing: -0.06em;
+  text-align: center;
+  font-weight: var(--font-weight-bold);
+}
+
+h2 {
+  margin: 0;
+  font-size: var(--font-size-2xl);
+  letter-spacing: -0.04em;
+  font-weight: var(--font-weight-bold);
+}
+
+h3 {
+  margin: 0;
+  font-size: 1.08rem;
+  font-weight: var(--font-weight-bold);
+}
+
+.subtitle {
+  margin: 0 0 calc(var(--space-xl) + 8px);
+  text-align: center;
+  color: var(--login-muted);
+  line-height: 1.5;
+}
+
+/* ============================================================================
+   5. FORM ELEMENTS
+   ============================================================================ */
+
+.login-form,
+.form-grid {
+  display: grid;
+  gap: var(--space-lg);
+}
+
+.form-grid {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+
+.field,
+.form-field {
+  display: grid;
+  gap: var(--space-sm);
+  text-align: left;
+}
+
+.form-field.full {
+  grid-column: 1 / -1;
+}
+
+.field label,
+.form-field label {
+  color: var(--login-muted);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-bold);
+  text-transform: capitalize;
+}
+
+.field input,
+.form-field input,
+.form-field select {
+  width: 100%;
+  padding: var(--space-md) var(--space-md);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--login-line);
+  font-size: var(--font-size-lg);
+  background: #fdfdfd;
+  color: var(--login-text);
+  font-family: inherit;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+}
+
+.field input:focus,
+.form-field input:focus,
+.form-field select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-soft);
+}
+
+.field input::placeholder {
+  color: var(--login-muted);
+  opacity: 0.7;
+}
+
+/* ============================================================================
+   6. BUTTON STYLES
+   ============================================================================ */
+
+.primary-btn,
+.secondary-btn,
+.danger-btn,
+.mini-btn {
+  border: none;
+  border-radius: var(--radius-lg);
+  padding: 11px 18px;
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-bold);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  text-transform: capitalize;
+}
+
+.primary-btn {
+  width: 100%;
+  background: var(--primary);
+  color: white;
+  box-shadow: 0 6px 16px rgba(31, 94, 255, 0.25);
+}
+
+.primary-btn:hover:not(:disabled) {
+  background: var(--primary-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(31, 94, 255, 0.3);
+}
+
+.primary-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.primary-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.secondary-btn {
+  background: var(--primary-soft);
+  color: var(--primary);
+}
+
+.secondary-btn:hover:not(:disabled) {
+  background: #d7e7ff;
+}
+
+.danger-btn {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+.danger-btn:hover:not(:disabled) {
+  background: #fae5e5;
+}
+
+.danger-btn:active:not(:disabled) {
+  transform: translateY(0);
+}
+
+.mini-btn {
+  padding: 7px 10px;
+  border-radius: var(--radius-md);
+  font-size: 0.85rem;
+}
+
+.mini-btn.edit {
+  background: var(--success-soft);
+  color: var(--success);
+}
+
+.mini-btn.delete {
+  background: var(--danger-soft);
+  color: var(--danger);
+}
+
+.close-btn {
+  border: none;
+  background: transparent;
+  font-size: 1.7rem;
+  color: var(--dash-muted);
+  cursor: pointer;
+  padding: 0;
+  transition: color var(--transition-fast);
+}
+
+.close-btn:hover {
+  color: var(--login-text);
+}
+
+/* ============================================================================
+   7. STATUS & MESSAGES
+   ============================================================================ */
+
+.status {
+  margin-top: var(--space-xl);
+  min-height: 24px;
+  text-align: center;
+  color: var(--login-muted);
+  font-size: var(--font-size-base);
+  animation: fadeIn var(--transition-base);
+}
+
+.status.error {
+  color: var(--danger);
+  font-weight: var(--font-weight-bold);
+}
+
+.status.success {
+  color: var(--success);
+  font-weight: var(--font-weight-bold);
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+/* ============================================================================
+   8. DASHBOARD LAYOUT
+   ============================================================================ */
+
+.app {
+  display: flex;
+  min-height: 100vh;
+  background: var(--dash-panel);
+}
+
+.sidebar {
+  width: 240px;
+  background: linear-gradient(180deg, var(--sidebar-bg) 0%, var(--sidebar-bg-alt) 100%);
+  color: var(--sidebar-text);
+  padding: var(--space-xl) var(--space-xl) var(--space-lg);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.sidebar .brand {
+  padding: var(--space-md) var(--space-md) var(--space-xl);
+  margin-bottom: var(--space-md);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  justify-content: flex-start;
+}
+
+.sidebar .brand-mark {
+  width: 22px;
+  height: 22px;
+  flex-shrink: 0;
+}
+
+.sidebar .brand-name {
+  font-size: 1.1rem;
+}
+
+.content {
+  flex: 1;
+  padding: var(--space-3xl) calc(var(--space-3xl) - 2px) calc(var(--space-xl) + 6px);
+  background: var(--dash-bg);
+  overflow-y: auto;
+}
+
+/* ============================================================================
+   9. NAVIGATION
+   ============================================================================ */
+
+.nav {
+  margin-top: var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-sm);
+  flex: 1;
+}
+
+.nav a {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: 11px var(--space-md);
+  border-radius: var(--radius-lg);
+  color: var(--sidebar-text);
+  opacity: 0.9;
+  transition: all var(--transition-fast);
+}
+
+.nav a:hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.nav a.active {
+  background: rgba(255, 255, 255, 0.08);
+  opacity: 1;
+}
+
+.nav-icon {
+  width: 18px;
+  text-align: center;
+  color: var(--sidebar-muted);
+}
+
+.divider {
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  margin: var(--space-md) 0;
+}
+
+/* ============================================================================
+   10. USER CARD & AUTHENTICATION
+   ============================================================================ */
+
+.usercard {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-md) var(--space-sm) var(--space-sm);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.avatar {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #a8cffc, #5a96ff);
+  display: grid;
+  place-items: center;
+  color: #fff;
+  font-weight: var(--font-weight-bold);
+  flex-shrink: 0;
+}
+
+.name {
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-bold);
+}
+
+.mail {
+  font-size: 0.73rem;
+  color: var(--sidebar-muted);
+}
+
+.logout-btn {
+  width: 100%;
+  margin-top: var(--space-md);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--sidebar-text);
+  border-radius: var(--radius-lg);
+  padding: var(--space-md) var(--space-md);
+  font-weight: var(--font-weight-bold);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  font-family: inherit;
+}
+
+.logout-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+}
+
+/* ============================================================================
+   11. TOOLBAR & SEARCH
+   ============================================================================ */
+
+.toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-xl);
+  gap: var(--space-lg);
+}
+
+.toolbar h1 {
+  margin: 0;
+  font-size: 2.1rem;
+  letter-spacing: -0.05em;
+}
+
+.actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-lg);
+}
+
+.search {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  width: 260px;
+  background: rgba(255, 255, 255, 0.7);
+  border: 1px solid var(--dash-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-md) var(--space-md);
+  color: var(--dash-muted);
+  transition: all var(--transition-fast);
+}
+
+.search:focus-within {
+  background: white;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--primary-soft);
+}
+
+.search input {
+  width: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: var(--font-size-base);
+  color: var(--login-text);
+  font-family: inherit;
+}
+
+.search input::placeholder {
+  color: var(--dash-muted);
+}
+
+/* ============================================================================
+   12. CARD & CONTAINER COMPONENTS
+   ============================================================================ */
+
+.workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(300px, 0.7fr);
+  gap: var(--space-xl);
+}
+
+.table-card,
+.detail-card {
+  background: var(--dash-card);
+  border: 1px solid var(--dash-border);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-md);
+}
+
+.table-card {
+  overflow: hidden;
+}
+
+.detail-card {
+  min-height: 420px;
+  padding: var(--space-xl);
+}
+
+/* ============================================================================
+   13. TABLE STYLES
+   ============================================================================ */
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--font-size-base);
+}
+
+thead th {
+  text-align: left;
+  font-size: var(--font-size-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--dash-muted);
+  background: #f8fafc;
+  border-bottom: 1px solid var(--dash-border);
+  padding: var(--space-md) var(--space-lg);
+  font-weight: var(--font-weight-bold);
+}
+
+tbody td {
+  padding: var(--space-lg);
+  border-bottom: 1px solid var(--dash-border);
+  font-size: var(--font-size-base);
+}
+
+tbody tr {
+  transition: background-color var(--transition-fast);
+}
+
+tbody tr:hover {
+  background: #fafcff;
+}
+
+tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.row-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-sm);
+}
+
+/* ============================================================================
+   14. DETAIL PANEL
+   ============================================================================ */
+
+.detail-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-md);
+  gap: var(--space-lg);
+}
+
+.detail-header h3 {
+  margin: 0;
+  font-size: 1.08rem;
+}
+
+.detail-empty {
+  color: var(--dash-muted);
+  line-height: 1.6;
+}
+
+.detail-info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-md);
+}
+
+.field {
+  background: #f7f9fb;
+  border: 1px solid var(--dash-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-md) var(--space-md);
+}
+
+.field-label {
+  display: block;
+  font-size: var(--font-size-xs);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--dash-muted);
+  margin-bottom: var(--space-sm);
+  font-weight: var(--font-weight-bold);
+}
+
+.field-value {
+  font-weight: var(--font-weight-bold);
+  color: var(--login-text);
+}
+
+.panel-actions {
+  display: flex;
+  gap: var(--space-sm);
+  margin-top: var(--space-md);
+}
+
+.panel-actions .secondary-btn,
+.panel-actions .danger-btn {
+  flex: 1;
+}
+
+/* ============================================================================
+   15. MODAL & OVERLAY STYLES
+   ============================================================================ */
+
+.modal {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 31, 0.46);
+  display: none;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-xl);
+  z-index: var(--z-modal);
+}
+
+.modal.open {
+  display: flex;
+  animation: fadeIn var(--transition-base);
+}
+
+.modal-box {
+  width: min(760px, 100%);
+  background: white;
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xl);
+  padding: var(--space-xl) calc(var(--space-xl) + 6px);
+  max-height: 90vh;
+  overflow-y: auto;
+  animation: slideUp var(--transition-base);
+}
+
+.modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-lg);
+  gap: var(--space-lg);
+}
+
+.modal-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  letter-spacing: -0.04em;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: var(--space-md);
+  margin-top: var(--space-xl);
+}
+
+/* ============================================================================
+   16. RESPONSIVE UTILITIES
+   ============================================================================ */
+
+@media (max-width: 980px) {
+  .workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .toolbar {
+    flex-wrap: wrap;
+    gap: var(--space-md);
+  }
+
+  .toolbar h1 {
+    font-size: 1.8rem;
+  }
+
+  .actions {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .search {
+    flex: 1;
+    max-width: 320px;
+  }
+
+  .detail-info-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 760px) {
+  .app {
+    flex-direction: column;
+  }
+
+  .sidebar {
+    width: 100%;
+    padding: var(--space-lg) var(--space-lg);
+  }
+
+  .sidebar .brand {
+    padding: var(--space-sm) var(--space-sm) var(--space-lg);
+  }
+
+  .content {
+    padding: var(--space-xl) var(--space-md);
+  }
+
+  .toolbar {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .toolbar h1 {
+    font-size: 1.5rem;
+  }
+
+  .actions {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .search {
+    width: 100%;
+    max-width: none;
+  }
+
+  .workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .modal-box {
+    padding: var(--space-lg);
+  }
+
+  .login-card {
+    padding: var(--space-2xl);
+  }
+
+  .login-shell {
+    width: calc(100vw - var(--space-md));
+  }
+
+  table {
+    font-size: 0.9rem;
+  }
+
+  thead th,
+  tbody td {
+    padding: var(--space-md);
+  }
+}
+
+@media (max-width: 600px) {
+  :root {
+    --font-size-2xl: 1.75rem;
+  }
+
+  .navbar-actions {
+    gap: var(--space-sm);
+  }
+
+  .primary-btn {
+    padding: 10px 14px;
+    font-size: 0.9rem;
+  }
+
+  .modal {
+    padding: var(--space-md);
+  }
+
+  .modal-box {
+    width: 100%;
+  }
+}
+
+/* ============================================================================
+   17. UTILITY CLASSES
+   ============================================================================ */
+
+.flex-center {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.flex-between {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.grid-auto {
+  display: grid;
+  gap: var(--space-md);
+}
+
+.hidden {
+  display: none !important;
+}
+
+.invisible {
+  visibility: hidden;
+}
+
+.mt-auto {
+  margin-top: auto;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-muted {
+  color: var(--login-muted);
+}
+
+.text-success {
+  color: var(--success);
+}
+
+.text-danger {
+  color: var(--danger);
+}
+
+.truncate {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* ============================================================================
+   18. ACCESSIBILITY & FOCUS STATES
+   ============================================================================ */
+
+/* High contrast mode support */
+@media (prefers-contrast: more) {
+  :root {
+    --border-width: 2px;
+  }
+
+  button,
+  input,
+  select {
+    border-width: 2px;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Focus visible for keyboard navigation */
+button:focus-visible,
+input:focus-visible,
+select:focus-visible,
+.nav a:focus-visible {
+  outline: 2px solid var(--primary);
+  outline-offset: 2px;
+}

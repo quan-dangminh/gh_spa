@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>BizFlow Login</title>
+    <link rel="stylesheet" href="/css/style.css" />
+  </head>
+  <body>
+    <main class="login-shell">
+      <div class="login-card">
+        <div class="brand">
+          <div class="brand-mark" aria-hidden="true"></div>
+          <div class="brand-name">BizFlow</div>
+        </div>
+        <h1>Welcome back</h1>
+        <p class="subtitle">Enter your name and email to continue to the dashboard and manage employees, customers, items, and invoices.</p>
+        <form id="loginForm" class="login-form">
+          <div class="field">
+            <label for="loginName">Full name</label>
+            <input id="loginName" name="name" type="text" placeholder="Enter your full name" required />
+          </div>
+          <div class="field">
+            <label for="loginEmail">Email</label>
+            <input id="loginEmail" name="email" type="email" placeholder="Enter your email" required />
+          </div>
+          <button class="primary-btn" type="submit">Continue</button>
+        </form>
+        <div id="status" class="status" aria-live="polite"></div>
+      </div>
+    </main>
+
+    <script>
+      const statusEl = document.getElementById('status');
+      const form = document.getElementById('loginForm');
+      const nameInput = document.getElementById('loginName');
+      const emailInput = document.getElementById('loginEmail');
+
+      function setStatus(message, isError = false) {
+        statusEl.textContent = message;
+        statusEl.classList.toggle('error', isError);
+      }
+
+      function getStoredUser() {
+        try {
+          return JSON.parse(localStorage.getItem('bizflow-current-user') || 'null');
+        } catch (error) {
+          return null;
+        }
+      }
+
+      function saveUser(user) {
+        localStorage.setItem('bizflow-current-user', JSON.stringify(user));
+      }
+
+      function initLoginPage() {
+        const stored = getStoredUser();
+        if (stored) {
+          window.location.href = '/home';
+          return;
+        }
+
+        form.addEventListener('submit', (event) => {
+          event.preventDefault();
+          const name = nameInput.value.trim();
+          const email = emailInput.value.trim();
+
+          if (!name || !email) {
+            setStatus('Please enter both your name and email.', true);
+            return;
+          }
+
+          const user = {
+            fullName: name,
+            name,
+            email
+          };
+
+          saveUser(user);
+          window.location.href = '/home';
+        });
+      }
+
+      initLoginPage();
+    </script>
+  </body>
+</html>
