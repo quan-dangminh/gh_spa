@@ -85,6 +85,7 @@
     .form-field.full { grid-column: 1 / -1; }
     .form-field label { font-size: 0.8rem; color: var(--muted); font-weight: 700; }
     .form-field input, .form-field select { width: 100%; border: 1px solid var(--border); border-radius: 10px; padding: 10px 12px; font-size: 0.96rem; background: #fdfdfd; }
+    .combo-search { margin-bottom: 6px; }
     .modal-actions { display: flex; justify-content: flex-end; gap: 10px; margin-top: 18px; }
     @media (max-width: 980px) { .workspace { grid-template-columns: 1fr; } .toolbar { flex-wrap: wrap; gap: 12px; } .actions { width: 100%; justify-content: space-between; } .search { flex: 1; max-width: 320px; } }
     @media (max-width: 760px) { .app { flex-direction: column; } .sidebar { width: 100%; } .form-grid { grid-template-columns: 1fr; } }
@@ -165,11 +166,13 @@
           </div>
           <div class="form-field">
             <label>Customer Name</label>
-            <input name="customer_name" required />
+            <input class="combo-search" data-target="customer_name" placeholder="Search customer..." />
+            <select name="customer_name" required><option value="">(select customer)</option></select>
           </div>
           <div class="form-field">
             <label>Item Name</label>
-            <input name="item_name" required />
+            <input class="combo-search" data-target="item_name" placeholder="Search item..." />
+            <select name="item_name" required><option value="">(select item)</option></select>
           </div>
           <div class="form-field">
             <label>Price</label>
@@ -247,7 +250,7 @@
       const user = ensureAuthenticated();
       if (!user) return;
       client = createClient((url || '').trim().replace(/\/+$/, ''), (key || '').trim());
-      await Promise.all([loadRows(), loadEmployeeNames()]);
+      await Promise.all([loadRows(), loadEmployeeNames(), loadCustomerNames(), loadItemNames()]);
     }
 
     function bindLogout() {
@@ -286,6 +289,74 @@
         console.warn('Could not load employee names:', err);
         selector.innerHTML = '<option value="">Could not load employees</option>';
       }
+    }
+
+    async function loadCustomerNames() {
+      const selector = document.querySelector('#invoiceForm select[name="customer_name"]');
+      const search = document.querySelector('#invoiceForm .combo-search[data-target="customer_name"]');
+      if (!selector || !client) return;
+      selector.innerHTML = '<option value="">(select customer)</option>';
+      selector._allOptions = [];
+      try {
+        const { data, error } = await client.from('customers').select('name').order('name', { ascending: true });
+        if (error) throw error;
+        for (const row of data || []) {
+          if (!row.name) continue;
+          selector._allOptions.push(row.name);
+          const option = document.createElement('option');
+          option.value = row.name;
+          option.textContent = row.name;
+          selector.appendChild(option);
+        }
+        if (search) {
+          search.value = '';
+          search.oninput = () => filterSelect(selector, search.value);
+        }
+      } catch (err) {
+        console.warn('Could not load customer names:', err);
+        selector.innerHTML = '<option value="">Could not load customers</option>';
+      }
+    }
+
+    async function loadItemNames() {
+      const selector = document.querySelector('#invoiceForm select[name="item_name"]');
+      const search = document.querySelector('#invoiceForm .combo-search[data-target="item_name"]');
+      if (!selector || !client) return;
+      selector.innerHTML = '<option value="">(select item)</option>';
+      selector._allOptions = [];
+      try {
+        const { data, error } = await client.from('items').select('name').eq('item_group', 'GÓI DỊCH VỤ').order('name', { ascending: true });
+        if (error) throw error;
+        for (const row of data || []) {
+          if (!row.name) continue;
+          selector._allOptions.push(row.name);
+          const option = document.createElement('option');
+          option.value = row.name;
+          option.textContent = row.name;
+          selector.appendChild(option);
+        }
+        if (search) {
+          search.value = '';
+          search.oninput = () => filterSelect(selector, search.value);
+        }
+      } catch (err) {
+        console.warn('Could not load item names:', err);
+        selector.innerHTML = '<option value="">Could not load items</option>';
+      }
+    }
+
+    function filterSelect(selector, query) {
+      const term = String(query || '').trim().toLowerCase();
+      const current = selector.value;
+      let firstMatch = null;
+      for (let i = 0; i < selector.options.length; i++) {
+        const opt = selector.options[i];
+        const match = !term || String(opt.textContent || '').toLowerCase().includes(term);
+        opt.hidden = !match;
+        if (match && !firstMatch) firstMatch = opt;
+      }
+      if (term && firstMatch) selector.value = firstMatch.value;
+      else if (!term) selector.value = current;
     }
 
     async function loadRows() {
@@ -395,8 +466,27 @@
       document.getElementById('modalTitle').textContent = title;
       state.editingId = id;
       form.invoice_number.value = row ? (row.invoice_number || '') : '';
-      form.customer_name.value = row ? (row.customer_name || '') : '';
-      form.item_name.value = row ? (row.item_name || '') : '';
+
+      const customerSelect = form.customer_name;
+      const customerValue = row ? (row.customer_name || '') : '';
+      if (customerValue && ![...customerSelect.options].some(opt => opt.value === customerValue)) {
+        const option = document.createElement('option');
+        option.value = customerValue;
+        option.textContent = customerValue;
+        customerSelect.appendChild(option);
+      }
+      customerSelect.value = customerValue;
+
+      const itemSelect = form.item_name;
+      const itemValue = row ? (row.item_name || '') : '';
+      if (itemValue && ![...itemSelect.options].some(opt => opt.value === itemValue)) {
+        const option = document.createElement('option');
+        option.value = itemValue;
+        option.textContent = itemValue;
+        itemSelect.appendChild(option);
+      }
+      itemSelect.value = itemValue;
+
       form.price.value = row ? (row.price ?? '') : '';
       form.quantity.value = row ? (row.quantity ?? 1) : 1;
       form.discount_amount.value = row ? (row.discount_amount ?? 0) : 0;
